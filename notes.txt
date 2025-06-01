@@ -1,0 +1,7 @@
+project: study assist with storing of what is achieved each pomodoro
+can also include a game each break
+
+project : beer pong shorttest time algorithm
+-input pubs
+-search the walk distance between
+-order them or create grah and run dijkstras
