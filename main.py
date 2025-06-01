@@ -20,6 +20,29 @@ pygame.display.set_caption(SCREENCAPTION)
 pygame.display.set_icon(SCREENICON)
 
 
+class Timer:
+  def __init__(self, StartMinutes, StartSeconds):
+    self.Minutes = StartMinutes
+    self.Seconds = StartSeconds
+    self.StartMinutes = StartMinutes
+
+  def Reset(self):
+    self.Minutes = self.StartMinutes
+    self.Seconds = self.StartSeconds
+
+  def decrement(self):
+    self.Seconds -= 1
+    if self.Seconds < 0:
+      self.Seconds = 59
+      self.Minutes -= 1
+
+  def isFinished(self):
+    if self.Minutes < 0 and self.Seconds < 0:
+      return True
+    else:
+      return False
+
+
 EMPTY_BUTTON_IMAGE = pygame.transform.scale(pygame.image.load("assets\empty button.png"), (400, 75))
 # class for buttons which takes inputs for the images and text to display and displays the text in that Image
 # also takes coordinate position to display the buttons at
