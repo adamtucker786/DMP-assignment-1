@@ -20,7 +20,7 @@ Screen = pygame.display.set_mode((SCREENWIDTH, SCREENHEIGHT))
 pygame.display.set_caption(SCREENCAPTION)
 pygame.display.set_icon(SCREENICON)
 
-
+FPS = 60
 clock = pygame.time.Clock()
 
 class Timer:
@@ -28,19 +28,27 @@ class Timer:
     self.Minutes = StartMinutes
     self.Seconds = StartSeconds
     self.StartMinutes = StartMinutes
+    self.StartSeconds = StartSeconds
+    self.Speed = 1
 
   def Reset(self):
     self.Minutes = self.StartMinutes
     self.Seconds = self.StartSeconds
 
   def decrement(self):
-    self.Seconds -= 1
+    self.Seconds -= self.Speed/FPS
     if self.Seconds < 0:
       self.Seconds = 59
       self.Minutes -= 1
 
+  def pause(self):
+    self.Speed = 0
+  
+  def resume(self):
+    self.Speed = 1
+
   def isFinished(self):
-    if self.Minutes < 0 and self.Seconds < 0:
+    if self.Minutes < 0:
       return True
     else:
       return False
@@ -88,11 +96,15 @@ def MenuScreen():
   AddText("study timer assistant", (400, 50), 60, BLACK)
 
 
-PomdoroTimer = Timer(25, 0)
+PAUSE_BUTTON = Buttons(EMPTY_BUTTON_IMAGE, "Pause Timer", 200, 400)
+RESUME_BUTTON = Buttons(EMPTY_BUTTON_IMAGE, "Resume Timer", 600, 400)
+PomdoroTimer = Timer(0, 10)
 def TimerScreen():
   Screen.fill(WHITE)
   AddText("Study time", (300, 50), 60, BLACK)
-  AddText(f"{PomdoroTimer.Minutes}:{PomdoroTimer.Seconds}", (400, 200), 60, BLACK)
+  AddText(f"{int(PomdoroTimer.Minutes)}:{int(PomdoroTimer.Seconds)}", (400, 200), 60, BLACK)
+  PAUSE_BUTTON.draw_button()
+  RESUME_BUTTON.draw_button()
 
 
 global Current_Page 
@@ -108,6 +120,12 @@ while Running:
     if event.type == pygame.MOUSEBUTTONDOWN:
       if (POMODORO_BUTTON.rect.collidepoint(event.pos)) & (Current_Page == "Menu"):
         Current_Page = "Timer"
+      if (CUSTOM_BUTTON.rect.collidepoint(event.pos)) & (Current_Page == "Menu"):
+        Current_Page = "Timer"
+      if (RESUME_BUTTON.rect.collidepoint(event.pos)) & (Current_Page == "Timer"):
+        PomdoroTimer.resume()
+      if (PAUSE_BUTTON.rect.collidepoint(event.pos)) & (Current_Page == "Timer"):
+        PomdoroTimer.pause()
 
 
   match Current_Page:
@@ -115,10 +133,11 @@ while Running:
       MenuScreen()
     case "Timer":
       TimerScreen()
-      PomdoroTimer.decrement()
-      if PomdoroTimer.isFinished():
+      if (PomdoroTimer.isFinished()== True) :
         Current_Page = "Menu"
-      clock.tick(1)
+        PomdoroTimer.Reset()
+      PomdoroTimer.decrement()
+      clock.tick(FPS)
     case _:
       MenuScreen()
 
