@@ -41,6 +41,9 @@ class Timer:
       self.Seconds = 59
       self.Minutes -= 1
 
+  def display(self):
+    AddText(f"{int(self.Minutes)}:{int(self.Seconds)}", (400, 200), 80, BLACK)
+
   def pause(self):
     self.Speed = 0
   
@@ -77,8 +80,7 @@ class Buttons:
   def isPressed(self, event):
     pass    
 
-
-
+  
 # function to display text on the Screen
 def AddText(text, position, size, colour):
   Font = pygame.font.Font(None, size)
@@ -102,9 +104,18 @@ PomdoroTimer = Timer(0, 10)
 def TimerScreen():
   Screen.fill(WHITE)
   AddText("Study time", (300, 50), 60, BLACK)
-  AddText(f"{int(PomdoroTimer.Minutes)}:{int(PomdoroTimer.Seconds)}", (400, 200), 60, BLACK)
+  PomdoroTimer.display()
   PAUSE_BUTTON.draw_button()
   RESUME_BUTTON.draw_button()
+
+
+
+START_CUSTOM_BUTTON = Buttons(EMPTY_BUTTON_IMAGE, "start Custom Timer", 200, 400)
+NewCustomTimer = Timer(0, 0)
+def CustomTimer():
+  Screen.fill(WHITE)
+  AddText("Create Custom Timer", (200, 50), 60, BLACK)
+  NewCustomTimer.display()
 
 
 global Current_Page 
@@ -121,7 +132,7 @@ while Running:
       if (POMODORO_BUTTON.rect.collidepoint(event.pos)) & (Current_Page == "Menu"):
         Current_Page = "Timer"
       if (CUSTOM_BUTTON.rect.collidepoint(event.pos)) & (Current_Page == "Menu"):
-        Current_Page = "Timer"
+        Current_Page = "CustomTimer"
       if (RESUME_BUTTON.rect.collidepoint(event.pos)) & (Current_Page == "Timer"):
         PomdoroTimer.resume()
       if (PAUSE_BUTTON.rect.collidepoint(event.pos)) & (Current_Page == "Timer"):
@@ -138,6 +149,8 @@ while Running:
         PomdoroTimer.Reset()
       PomdoroTimer.decrement()
       clock.tick(FPS)
+    case "CustomTimer":
+      CustomTimer()
     case _:
       MenuScreen()
 
