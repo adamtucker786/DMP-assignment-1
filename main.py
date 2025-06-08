@@ -23,6 +23,7 @@ pygame.display.set_icon(SCREENICON)
 FPS = 60
 clock = pygame.time.Clock()
 
+
 class Timer:
   def __init__(self, StartMinutes, StartSeconds):
     self.Minutes = StartMinutes
@@ -57,6 +58,25 @@ class Timer:
       return False
 
 
+class customTimer(Timer):
+  def __init__(self, StartMinutes, StartSeconds):
+    super().__init__(StartMinutes, StartSeconds)
+
+  def increaseMinutes(self):
+    self.Minutes += 1
+
+  def decreaseMinutes(self):
+    self.Minutes -= 1
+
+  def increaseSeconds(self):
+    self.Seconds += 1
+
+  def decreaseSeconds(self):
+    self.Seconds -= 1
+
+  
+
+
 EMPTY_BUTTON_IMAGE = pygame.transform.scale(pygame.image.load("assets\Button.png"), (400, 75))
 # class for buttons which takes inputs for the images and text to display and displays the text in that Image
 # also takes coordinate position to display the buttons at
@@ -77,9 +97,11 @@ class Buttons:
     Screen.blit(self.Image, self.rect)
     Screen.blit(self.button_text, self.text_rect)
 
-  def isPressed(self, event):
-    pass    
-
+  def isPressed(self)-> bool:
+    pressed = False
+    if self.rect.collidepoint(event.pos):
+      pressed = True
+    return pressed
   
 # function to display text on the Screen
 def AddText(text, position, size, colour):
@@ -109,13 +131,33 @@ def TimerScreen():
   RESUME_BUTTON.draw_button()
 
 
-
-START_CUSTOM_BUTTON = Buttons(EMPTY_BUTTON_IMAGE, "start Custom Timer", 200, 400)
-NewCustomTimer = Timer(0, 0)
-def CustomTimer():
+INCREASE_ARROW_iMAGE = pygame.transform.scale(pygame.image.load("assets\_UpArrowImage.png"), (50, 50))
+DECREASE_ARROW_iMAGE = pygame.transform.scale(pygame.image.load("assets\_DownArrowImage.png"), (50, 50))
+MINUTE_INCREASE_BUTTON = Buttons(INCREASE_ARROW_iMAGE, "", 50, 200)
+SECOND_INCREASE_BUTTON = Buttons(INCREASE_ARROW_iMAGE, "", 950, 200)
+MINUTE_DECREASE_BUTTON = Buttons(DECREASE_ARROW_iMAGE, "", 50, 250) 
+SECOND_DECREASE_BUTTON = Buttons(DECREASE_ARROW_iMAGE, "", 950, 250)
+START_CUSTOM_BUTTON = Buttons(pygame.transform.scale(pygame.image.load("assets\Button.png"), (450, 50)), "start Custom Timer", SCREENWIDTH/2, SCREENHEIGHT*0.8)
+CustomTimer = customTimer(0, 0)
+def CustomTimerCreation():
   Screen.fill(WHITE)
   AddText("Create Custom Timer", (200, 50), 60, BLACK)
-  NewCustomTimer.display()
+  CustomTimer.display()
+  MINUTE_INCREASE_BUTTON.draw_button()
+  SECOND_INCREASE_BUTTON.draw_button()
+  MINUTE_DECREASE_BUTTON.draw_button()
+  SECOND_DECREASE_BUTTON.draw_button()
+  START_CUSTOM_BUTTON.draw_button()
+
+
+
+def CustomTimerCount():
+  Screen.fill(WHITE)
+  AddText("Study time", (300, 50), 60, BLACK)
+  CustomTimer.display()
+  PAUSE_BUTTON.draw_button()
+  RESUME_BUTTON.draw_button()
+  
 
 
 global Current_Page 
@@ -129,29 +171,53 @@ while Running:
     if event.type == pygame.QUIT:
       Running = False
     if event.type == pygame.MOUSEBUTTONDOWN:
-      if (POMODORO_BUTTON.rect.collidepoint(event.pos)) & (Current_Page == "Menu"):
+      if (POMODORO_BUTTON.isPressed()) & (Current_Page == "Menu"):
         Current_Page = "Timer"
-      if (CUSTOM_BUTTON.rect.collidepoint(event.pos)) & (Current_Page == "Menu"):
-        Current_Page = "CustomTimer"
-      if (RESUME_BUTTON.rect.collidepoint(event.pos)) & (Current_Page == "Timer"):
+      if (CUSTOM_BUTTON.isPressed()) & (Current_Page == "Menu"):
+        Current_Page = "CustomTimerCreation"
+      if (RESUME_BUTTON.isPressed()) & (Current_Page == "Timer"):
         PomdoroTimer.resume()
-      if (PAUSE_BUTTON.rect.collidepoint(event.pos)) & (Current_Page == "Timer"):
+      if (PAUSE_BUTTON.isPressed()) & (Current_Page == "Timer"):
         PomdoroTimer.pause()
+      if (RESUME_BUTTON.isPressed()) & (Current_Page == "CustomTimerCount"):
+        CustomTimer.resume()
+      if (PAUSE_BUTTON.isPressed()) & (Current_Page == "CustomTimerCount"):
+        CustomTimer.pause()
+      if (MINUTE_INCREASE_BUTTON.isPressed()) & (Current_Page == "CustomTimerCreation"):
+        CustomTimer.increaseMinutes()
+      if (SECOND_INCREASE_BUTTON.isPressed()) & (Current_Page == "CustomTimerCreation"):
+        CustomTimer.increaseSeconds()
+      if (MINUTE_DECREASE_BUTTON.isPressed()) & (Current_Page == "CustomTimerCreation"):
+        CustomTimer.decreaseMinutes()
+      if (SECOND_DECREASE_BUTTON.isPressed()) & (Current_Page == "CustomTimerCreation"):
+        CustomTimer.decreaseSeconds()
+      if (START_CUSTOM_BUTTON.isPressed()) & (Current_Page == "CustomTimerCreation"):
+        Current_Page = "CustomTimerCount"
 
 
   match Current_Page:
     case "Menu":
       MenuScreen()
+
     case "Timer":
       TimerScreen()
+      PomdoroTimer.decrement()
       if (PomdoroTimer.isFinished()== True) :
         Current_Page = "Menu"
         PomdoroTimer.Reset()
-      PomdoroTimer.decrement()
-      clock.tick(FPS)
-    case "CustomTimer":
-      CustomTimer()
+
+    case "CustomTimerCreation":
+      CustomTimerCreation()
+
+    case "CustomTimerCount":
+      CustomTimerCount()
+      CustomTimer.decrement()
+      if (CustomTimer.isFinished()== True) :
+        Current_Page = "Menu"
+        CustomTimer.Reset()
+
     case _:
       MenuScreen()
 
+  clock.tick(FPS)
   pygame.display.update()
