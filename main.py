@@ -250,8 +250,28 @@ def Reflect():
 
 
 def WriteToExcel():
-  df = df.append([10, "DMP", "DMP aAssignment 1", "09/06/2025"])
-  df.to_excel("assets\StudyHistory.xlsx")
+    try:
+        # Load the existing data
+        df = pd.read_excel("assets/StudyHistory.xlsx")
+    except FileNotFoundError:
+        # If the file does not exist, create a new DataFrame with appropriate columns
+        df = pd.DataFrame(columns=["ID", "Subject", "Summary", "Date"])
+
+    # Create a new entry row as a dictionary
+    new_entry = {
+        "ID": len(df) + 1,
+        "Subject": subject_message,
+        "Summary": summary_message,
+        "Date": pd.Timestamp.now().strftime('%d/%m/%Y')
+    }
+
+    # Add the new entry to the DataFrame
+    df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
+
+    # Save back to Excel (use raw string or forward slashes)
+    df.to_excel("assets/StudyHistory.xlsx", index=False)
+
+
 
 global Current_Page
 global Summary_Box_active
@@ -311,7 +331,7 @@ while Running:
         Subject_Box_active = 0
         Summary_Box_active = 1
       if (Current_Page == "Reflect") & (SUBMIT_BUTTON.isPressed()):
-        #WriteToExcel()
+        WriteToExcel()
         subject_message = ""
         summary_message = ""
         Current_Page = "BreakTimer"
