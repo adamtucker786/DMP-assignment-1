@@ -27,7 +27,6 @@ pygame.display.set_icon(SCREENICON)
 FPS = 60
 clock = pygame.time.Clock()
 
-global df
 
 # class for the timer system 
 class Timer:
@@ -57,7 +56,7 @@ class Timer:
   # method to display the timer to the middle of the screen using my add text method
   def display(self):
     # casting the values to an int so only whole nmbers are displayed on the screen as in reality the timer counts to fraction of a second accuracy
-    AddText(f"{int(self.Minutes)}:{int(self.Seconds)}", (400, 200), 80, BLACK)
+    AddText(f"{int(self.Minutes)}:{int(self.Seconds)}", (425, 200), 80, BLACK)
 
   # method to pause the timer by setting the speed to zero as this means each frame zero is taken from the seconds so timer stays same
   def pause(self):
@@ -164,20 +163,20 @@ def MenuScreen():
 
 
 # creating objects of the buttons class for pausing and resuming the timer
-PAUSE_BUTTON = Buttons(EMPTY_BUTTON_IMAGE, "Pause Timer", 200, 400)
-RESUME_BUTTON = Buttons(EMPTY_BUTTON_IMAGE, "Resume Timer", 600, 400)
+PAUSE_BUTTON = Buttons(pygame.transform.scale(EMPTY_BUTTON_IMAGE, (SCREENWIDTH/2, 75)), "Pause Timer", 250, 400)
+RESUME_BUTTON = Buttons(pygame.transform.scale(EMPTY_BUTTON_IMAGE, (SCREENWIDTH/2, 75)), "Resume Timer", 750, 400)
 # creating an instance of the timer class for the main pomodoro timer with initial values of 25 minutes and zero seconds
 PomdoroTimer = Timer(25, 0)
 def TimerScreen():
   Screen.fill(WHITE)
   # title for the page
-  AddText("Study time", (300, 50), 60, BLACK)
+  AddText("Study time", (350, 50), 70, BLACK)
   # displaying the timer with the class method
   PomdoroTimer.display()
   # displaying the pause and resume buttons with the class method
   PAUSE_BUTTON.draw_button()
   RESUME_BUTTON.draw_button()
-  SKIP.draw_button()
+  #SKIP.draw_button()
 
 
 # loading arrow images for use in buttons in timer creation stage
@@ -215,64 +214,73 @@ def CustomTimerCount():
   CustomTimer.display()
   PAUSE_BUTTON.draw_button()
   RESUME_BUTTON.draw_button()
-  SKIP.draw_button()
+  #SKIP.draw_button()
   
 
 BreakTimer = Timer(5,0)
 def BreakTimerScreen():
   Screen.fill(WHITE)
-  AddText("break time", (300, 50), 60, BLACK)
+  AddText("break time", (350, 50), 70, BLACK)
   BreakTimer.display()
-  SKIP.draw_button()
+  AddText("Take a break from study before continuing for better productivity", (100, 450), 30, BLACK)
+  #SKIP.draw_button()
 
 
+#function to read from the excel document for the details of previous study
 def ReadExcel() -> list:
-  df = pd.read_excel("assets/StudyHistory.xlsx")  # Make sure the path uses forward slashes or raw string
+  # using pandas to read data from the excel sheet
+  df = pd.read_excel("assets/StudyHistory.xlsx")
+  # creating a new list to be able to return the excel rows
   Rows = []
+  # for eachrow in the excel form
   for index, row in df.iterrows():
+    #creating a string using the data in the excel row by adding the title and data item of each collumn to the string
     RowString = ', '.join([f"{col}: {row[col]}" for col in df.columns])
+    # adding the new sring to the list of rows to return and dislay on the menu screen
     Rows.append(RowString)
   return Rows
 
 
+#fucntion to create the display screen for the reflect stage
+# creating the boxes and buttons for inputting detail;s about study completed
 SUBMIT_BUTTON = Buttons(pygame.transform.scale(pygame.image.load("assets\Button.png"),(150, 80)), "submit", 900, 275)
 Subject_Box = Buttons(pygame.transform.scale(pygame.image.load("assets\Button.png"),(700, 150)), "", 500, 150)
 Summary_Box = Buttons(pygame.transform.scale(pygame.image.load("assets\Button.png"),(700, 150)), "", 500, 400)
 def Reflect():
   Screen.fill(WHITE)
+  # title fort the subject text input box
   AddText("what subject did you study?", (300, 50), 30, BLACK)
+  # displaying box for text input
   Subject_Box.draw_button()
+  # displaying what the user types so theycan see what they are inputting
   AddText(subject_message, (300, 100), 30, BLACK)
   AddText("write a breif summary of your study:", (300, 300), 30, BLACK)
   Summary_Box.draw_button()
   AddText(summary_message, (300, 350), 30, BLACK)
+  # displaying the draw button
   SUBMIT_BUTTON.draw_button()
 
 
 def WriteToExcel():
-    try:
-        # Load the existing data
-        df = pd.read_excel("assets/StudyHistory.xlsx")
-    except FileNotFoundError:
-        # If the file does not exist, create a new DataFrame with appropriate columns
-        df = pd.DataFrame(columns=["ID", "Subject", "Summary", "Date"])
-
-    # Create a new entry row as a dictionary
-    new_entry = {
-        "ID": len(df) + 1,
+    # re laod the data so it is accessible in this function
+    df = pd.read_excel("assets/StudyHistory.xlsx")
+    # create new set of data for the excel line to be written
+    NewRecord = {
+        "Duration": StudyDuration,
         "Subject": subject_message,
         "Summary": summary_message,
         "Date": pd.Timestamp.now().strftime('%d/%m/%Y')
     }
 
     # Add the new entry to the DataFrame
-    df = pd.concat([df, pd.DataFrame([new_entry])], ignore_index=True)
+    df = pd.concat([df, pd.DataFrame([NewRecord])], ignore_index=True)
 
-    # Save back to Excel (use raw string or forward slashes)
-    df.to_excel("assets/StudyHistory.xlsx", index=False)
+    # writing the dataframe to the exce sheet so that the data is saved
+    df.to_excel("assets/StudyHistory.xlsx", index = False)
 
 
 
+# loading gloabal variables for easy access throughout the program
 global Current_Page
 global Summary_Box_active
 global Subject_Box_active
@@ -283,6 +291,9 @@ summary_message = ""
 Subject_Box_active = 1
 Summary_Box_active = 0
 Current_Page = "Menu"
+global StudyDuration
+StudyDuration = 0
+
 # mainloop with running condition to end game
 Running = True
 while Running:
@@ -292,81 +303,131 @@ while Running:
     if event.type == pygame.QUIT:
       Running = False
 
-    # checking buttons for being pressed
+    # checking if mouse button has been clicked for putton press purposes
     if event.type == pygame.MOUSEBUTTONDOWN:
-      if (POMODORO_BUTTON.isPressed()) & (Current_Page == "Menu"):
-        Current_Page = "Timer"
-      if (CUSTOM_BUTTON.isPressed()) & (Current_Page == "Menu"):
-        Current_Page = "CustomTimerCreation"
-      if (RESUME_BUTTON.isPressed()) & (Current_Page == "Timer"):
-        PomdoroTimer.resume()
-      if (PAUSE_BUTTON.isPressed()) & (Current_Page == "Timer"):
-        PomdoroTimer.pause()
-      if (RESUME_BUTTON.isPressed()) & (Current_Page == "CustomTimerCount"):
-        CustomTimer.resume()
-      if (PAUSE_BUTTON.isPressed()) & (Current_Page == "CustomTimerCount"):
-        CustomTimer.pause()
-      if (MINUTE_INCREASE_BUTTON.isPressed()) & (Current_Page == "CustomTimerCreation"):
-        CustomTimer.increaseMinutes()
-      if (SECOND_INCREASE_BUTTON.isPressed()) & (Current_Page == "CustomTimerCreation"):
-        CustomTimer.increaseSeconds()
-      if (MINUTE_DECREASE_BUTTON.isPressed()) & (Current_Page == "CustomTimerCreation"):
-        CustomTimer.decreaseMinutes()
-      if (SECOND_DECREASE_BUTTON.isPressed()) & (Current_Page == "CustomTimerCreation"):
-        CustomTimer.decreaseSeconds()
-      if (START_CUSTOM_BUTTON.isPressed()) & (Current_Page == "CustomTimerCreation"):
-        BreakTimer.Minutes = CustomTimer.Minutes * 0.2
-        BreakTimer.Seconds = CustomTimer.Seconds * 0.2
-        Current_Page = "CustomTimerCount"
-      if (SKIP.isPressed()) & (Current_Page == "CustomTimerCount"):
-        CustomTimer.Minutes = 0
-        CustomTimer.Seconds = 10
-      if (SKIP.isPressed()) & (Current_Page == "Timer"):
-        PomdoroTimer.Minutes = 0
-        PomdoroTimer.Seconds = 10
-      if (Current_Page == "Reflect") & (Subject_Box.isPressed()):
-        Subject_Box_active = 1
-        Summary_Box_active = 0
-      if (Current_Page == "Reflect") & (Summary_Box.isPressed()):
-        Subject_Box_active = 0
-        Summary_Box_active = 1
-      if (Current_Page == "Reflect") & (SUBMIT_BUTTON.isPressed()):
-        WriteToExcel()
-        subject_message = ""
-        summary_message = ""
-        Current_Page = "BreakTimer"
+      # checkign for buttons clicked on the menu screen
+      if (Current_Page == "Menu"):
+        # check for pomodoro timer button press and call pomodoro timer screen in response
+        if (POMODORO_BUTTON.isPressed()):
+          Current_Page = "Timer"
+        # checking for custom timer buttonbeing pressed and calling custom timer in response
+        if (CUSTOM_BUTTON.isPressed()):
+          Current_Page = "CustomTimerCreation"
 
+      # checking for buttons preessed while in the timer screen
+      if (Current_Page == "Timer"):
+        #checking if the pause or resume buttons have been pressed by calling the is pressed method of the buttons class and calling the pause3 or resume method of timer class in response
+        if (RESUME_BUTTON.isPressed()):
+          PomdoroTimer.resume()
+        if (PAUSE_BUTTON.isPressed()):
+          PomdoroTimer.pause()
+        # adding in a skip feature for demo purposes which when pressed sets the timer to only have 5 seconds left
+        if (SKIP.isPressed()):
+          PomdoroTimer.Minutes = 0
+          PomdoroTimer.Seconds = 5
+
+      if (Current_Page == "CustomTimerCount"):
+        #checking if the pause or resume buttons have been pressed by calling the is pressed method of the buttons class and calling the pause3 or resume method of timer class in response
+        if (RESUME_BUTTON.isPressed()):
+          CustomTimer.resume()
+        if (PAUSE_BUTTON.isPressed()):
+          CustomTimer.pause()
+        # adding in a skip feature for demo purposes which when pressed sets the timer to only have 5 seconds left
+        if (SKIP.isPressed()):
+          CustomTimer.Minutes = 0
+          CustomTimer.Seconds = 5
+
+      # adding checks for if the buttons in the timer creattion screen for a custom timer have been pressed and calling the relevant method in response
+      if (Current_Page == "CustomTimerCreation"):
+        if (MINUTE_INCREASE_BUTTON.isPressed()):
+          CustomTimer.increaseMinutes()
+        if (SECOND_INCREASE_BUTTON.isPressed()):
+          CustomTimer.increaseSeconds()
+        if (MINUTE_DECREASE_BUTTON.isPressed()):
+          CustomTimer.decreaseMinutes()
+        if (SECOND_DECREASE_BUTTON.isPressed()):
+          CustomTimer.decreaseSeconds()
+        if (START_CUSTOM_BUTTON.isPressed()):
+          # setting the length of the break timer to be a fifth of the length of the custom timer similar to the pomodoro timer
+          BreakTimer.Minutes = CustomTimer.Minutes * 0.2
+          BreakTimer.Seconds = CustomTimer.Seconds * 0.2
+          # setting the study duration to a five times the duration of the break timer as this isd the 
+          StudyDuration = BreakTimer.Minutes*5
+          # moving to the timer page to start the clock
+          Current_Page = "CustomTimerCount"
+
+      # adding in a skip feature for demo purposes which when pressed sets the timer to only have 5 seconds left
+      if (SKIP.isPressed()) & (Current_Page == "BreakTimer"):
+        BreakTimer.Minutes = 0
+        BreakTimer.Seconds = 10
+
+      # checking for buttons being pressed in the relection page
+      if (Current_Page == "Reflect"):
+        # making the pressed text input box active so the user can type in the box they click on
+        if (Subject_Box.isPressed()):
+          Subject_Box_active = 1
+          Summary_Box_active = 0
+        # making the pressed text input box active so the user can type in the box they click on
+        if (Summary_Box.isPressed()):
+          Subject_Box_active = 0
+          Summary_Box_active = 1
+        # submitting the answers the user has given buy calling the write to excel functions
+        # also resetting the messages to be empty so its empty for the next time the reflect screen appears
+        if (SUBMIT_BUTTON.isPressed()):
+          WriteToExcel()
+          subject_message = ""
+          summary_message = ""
+          # moving the program onto the break stage
+          Current_Page = "BreakTimer"
+    
+    # checkign for key press input from the user
     if event.type == pygame.KEYDOWN:
+      # if the subject box has been clicked on and is active
       if (Current_Page == "Reflect") & (Subject_Box_active == 1):
+        # if the inputted key is a backspace then remove the last character in the message
         if event.key == pygame.K_BACKSPACE:
+          # removing the last letter by using slicing of a string
           subject_message = subject_message[0:len(subject_message)-1]
         else:
+          # add the inputted characters to the message that the user types
           subject_message = subject_message + event.unicode 
+      # if the summary box has been clicked on and is active
       if (Current_Page == "Reflect") & (Summary_Box_active == 1):
+        # if the inputted key is a backspace then remove the last character in the message
         if event.key == pygame.K_BACKSPACE:
+          # removing the last letter by using slicing of a string
           summary_message = summary_message[0:len(summary_message)-1]
         else:
+          # add the inputted characters to the message that the user types
           summary_message = summary_message + event.unicode
 
 
-  # claling functions based on the current page being displayed
+  # calling functions based on the current page being displayed
   match Current_Page:
     case "Menu":
       MenuScreen()
 
     case "Timer":
       TimerScreen()
+      # during the timer stage count down the timer every frame
       PomdoroTimer.decrement()
+      # checking if the timer is finished
       if (PomdoroTimer.isFinished()== True) :
+        # resetting the tiemr and calling the next age which is the break page
         Current_Page = "Reflect"
         PomdoroTimer.Reset()
         BreakTimer.Minutes = 5
         BreakTimer.Seconds = 0
+        # setting the study duration so that it can be saved in the excel
+        StudyDuration = 25
 
+    # if in the timer stage of the program
     case "BreakTimer":
       BreakTimerScreen()
+      # decrerment the timer
       BreakTimer.decrement()
       if (BreakTimer.isFinished()== True) :
+        # mpoving back to the menu screen if timer finished and resetting the timer for next time
         Current_Page = "Menu"
         BreakTimer.Reset()
 
