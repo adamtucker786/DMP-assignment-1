@@ -1,6 +1,0 @@
-project: study assist with storing of what is achieved each pomodoro
--create breaks with break timers
--create storing of what was achieved and length of study
--create detsils about time studied using pandas
--create graphs based on study data
--create presentation ready for recording for uni assignment hand in
